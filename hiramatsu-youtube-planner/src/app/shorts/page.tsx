@@ -226,7 +226,10 @@ export default function ShortsPage() {
       const parsed = parseProposalsResponse(data.data.rawMarkdown);
 
       if (parsed.proposals.length === 0) {
-        throw new Error('企画案のパースに失敗しました。再度お試しください。');
+        // デバッグ情報をコンソールに出力
+        console.log('Parse failed. Debug info:', data.data.debug);
+        console.log('Raw response (first 500 chars):', data.data.rawMarkdown?.substring(0, 500));
+        throw new Error(`企画案のパースに失敗しました。レスポンス長: ${data.data.debug?.responseLength || 'unknown'}, 先頭: ${data.data.debug?.first100 || 'unknown'}`);
       }
 
       setResult(parsed);

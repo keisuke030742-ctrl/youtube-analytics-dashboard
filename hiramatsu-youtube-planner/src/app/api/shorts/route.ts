@@ -91,16 +91,27 @@ export async function POST(request: NextRequest) {
       throw new Error('生成結果が取得できませんでした');
     }
 
+    // デバッグ: レスポンスの最初と最後を記録
+    const responseText = textContent.text;
+    console.log('API Response length:', responseText.length);
+    console.log('API Response start:', responseText.substring(0, 200));
+    console.log('API Response end:', responseText.substring(responseText.length - 200));
+
     return NextResponse.json({
       success: true,
       data: {
-        rawMarkdown: textContent.text,
+        rawMarkdown: responseText,
         model: modelId,
         usage: {
           inputTokens: message.usage.input_tokens,
           outputTokens: message.usage.output_tokens,
         },
         research: researchData,
+        debug: {
+          responseLength: responseText.length,
+          startsWithBrace: responseText.trim().startsWith('{'),
+          first100: responseText.substring(0, 100),
+        },
       },
     });
   } catch (error) {
