@@ -2,8 +2,11 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: '平松建築 YouTube企画ツール',
-  description: 'AI を活用した YouTube 動画企画・台本作成支援ツール',
+  title: 'ショート台本AI | 平松建築',
+  description: 'AI を活用した YouTube ショート動画の企画・台本作成支援ツール',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
