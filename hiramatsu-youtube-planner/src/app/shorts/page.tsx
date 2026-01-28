@@ -837,18 +837,17 @@ export default function ShortsPage() {
                       {/* バー部分 */}
                       <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '80px', marginBottom: '4px' }}>
                         {[
-                          { label: '〜1万', height: 60 },
-                          { label: '1〜5万', height: 80 },
-                          { label: '5〜10万', height: 50 },
-                          { label: '10〜50万', height: 30 },
-                          { label: '50万〜', height: 15 },
+                          { label: '〜1万', height: 48 },
+                          { label: '1〜5万', height: 64 },
+                          { label: '5〜10万', height: 40 },
+                          { label: '10〜50万', height: 24 },
+                          { label: '50万〜', height: 12 },
                         ].map((b, i) => (
                           <div key={i} style={{
                             flex: 1,
-                            height: `${b.height}%`,
+                            height: `${b.height}px`,
                             background: i === 1 ? '#1976D2' : '#90CAF9',
-                            borderRadius: '4px 4px 0 0',
-                            minHeight: '4px'
+                            borderRadius: '4px 4px 0 0'
                           }} />
                         ))}
                       </div>
