@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Light Theme - Solar Simulation Style */
+:root {
+  --radius: 12px;
+
+  /* Backgrounds */
+  --background: #EDF2F7;
+  --background-secondary: #E2E8F0;
+
+  /* Cards */
+  --card: #FFFFFF;
+  --card-foreground: #1A202C;
+
+  /* Text */
+  --foreground: #1A202C;
+  --muted-foreground: #718096;
+
+  /* Borders */
+  --border: #E2E8F0;
+  --border-light: #EDF2F7;
+
+  /* Primary - Coral/Salmon accent */
+  --primary: #E57373;
+  --primary-foreground: #FFFFFF;
+
+  /* Secondary */
+  --secondary: #F7FAFC;
+  --secondary-foreground: #1A202C;
+
+  /* Accent colors for charts/data */
+  --accent-coral: #E57373;
+  --accent-blue: #4299E1;
+  --accent-green: #48BB78;
+  --accent-orange: #ED8936;
+
+  /* Input */
+  --input: #FFFFFF;
+  --input-border: #E2E8F0;
+  --input-focus: #4299E1;
+
+  /* Status Colors */
+  --success: #48BB78;
+  --warning: #ED8936;
+  --error: #E53E3E;
+
+  /* Muted */
+  --muted: #F7FAFC;
+
+  /* Ring */
+  --ring: #4299E1;
+
+  /* Popover */
+  --popover: #FFFFFF;
+  --popover-foreground: #1A202C;
+
+  /* Destructive */
+  --destructive: #E53E3E;
+  --destructive-foreground: #FFFFFF;
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E0;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A0AEC0;
+}
+
+/* Selection */
+::selection {
+  background: rgba(66, 153, 225, 0.2);
+  color: #1A202C;
+}
+
+/* Card shadow utility */
+.card-shadow {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.card-shadow-lg {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+}
