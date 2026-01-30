@@ -65,7 +65,7 @@ export class SheetsSyncService {
 
       // 行データをパース
       const keywords: KeywordImportRow[] = data.values
-        .map((row) => {
+        .map((row): KeywordImportRow | null => {
           const keyword = row[0]?.trim();
           if (!keyword) return null;
 
@@ -113,7 +113,7 @@ export class SheetsSyncService {
       }
 
       const keywords: KeywordImportRow[] = data.values
-        .map((row) => {
+        .map((row): KeywordImportRow | null => {
           const keyword = row[0]?.trim();
           if (!keyword) return null;
 

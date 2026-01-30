@@ -138,7 +138,6 @@ export const keywordRouter = createTRPCRouter({
 
       await ctx.prisma.keyword.createMany({
         data: keywords,
-        skipDuplicates: true,
       });
 
       return { created: keywords.length, skipped: 0 };

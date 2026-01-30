@@ -14,10 +14,12 @@ export function BatchHistory() {
   });
 
   // 選択されたバッチの詳細を取得
-  const { data: batchDetail } = trpc.batch.getById.useQuery(
+  const { data: batchDetailData } = trpc.batch.getById.useQuery(
     { id: selectedBatchId! },
     { enabled: !!selectedBatchId }
   );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const batchDetail = batchDetailData as any;
 
   const getStatusBadge = (status: string) => {
     const styles = {
@@ -51,7 +53,14 @@ export function BatchHistory() {
             <p className="text-center py-8 text-gray-500">読み込み中...</p>
           ) : batchesData?.batches && batchesData.batches.length > 0 ? (
             <div className="space-y-2">
-              {batchesData.batches.map((batch) => (
+              {(batchesData.batches as unknown as Array<{
+                id: string;
+                triggeredAt: string;
+                triggeredBy: string;
+                status: string;
+                completedPlans: number;
+                totalPlans: number;
+              }>).map((batch) => (
                 <button
                   key={batch.id}
                   onClick={() => setSelectedBatchId(batch.id)}
@@ -162,7 +171,7 @@ export function BatchHistory() {
                     生成された企画 ({batchDetail.projects.length}件)
                   </p>
                   <div className="max-h-60 overflow-y-auto space-y-2">
-                    {batchDetail.projects.map((project) => (
+                    {batchDetail.projects.map((project: { id: string; title?: string; keyword?: string; status: string }) => (
                       <a
                         key={project.id}
                         href={`/projects/${project.id}`}
