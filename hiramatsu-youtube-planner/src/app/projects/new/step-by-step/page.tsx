@@ -1,5 +1,8 @@
 'use client';
 
+// 静的生成をスキップ（tRPCが必要なため）
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc/client';
