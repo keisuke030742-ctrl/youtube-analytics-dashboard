@@ -1,0 +1,271 @@
+// Prisma schema for Hiramatsu YouTube Planner
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 企画（プロジェクト）
+model Project {
+  id                String         @id @default(cuid())
+  title             String?        // 最終タイトル
+  keyword           String?        // SEOキーワード
+  userInstruction   String         // ユーザーからの指示
+  status            ProjectStatus  @default(DRAFT)
+
+  // メタデータ
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  // 実行ログ
+  executions        Execution[]
+
+  // Phase結果（JSON）
+  phase1Result      Json?
+  phase2Result      Json?
+  phase3Result      Json?
+  phase4Result      Json?
+
+  // 最終成果物
+  finalScript       String?
+  thumbnailWord     String?
+
+  // 自動生成バッチ関連
+  batchId           String?
+  batch             AutoPlanBatch? @relation(fields: [batchId], references: [id])
+
+  // Super Orchestrator用拡張（優先度ランキング）
+  priorityScore     Float?         // 優先度スコア (0-100)
+  priorityRank      Int?           // 優先順位 (1-30)
+  priorityFactors   Json?          // スコア算出要因
+  estimatedViews    Int?           // 推定視聴回数
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([keyword])
+  @@index([batchId])
+  @@index([priorityRank])
+}
+
+enum ProjectStatus {
+  DRAFT           // 下書き
+  IN_PROGRESS     // 実行中
+  COMPLETED       // 完了
+  FAILED          // 失敗
+}
+
+// 実行ログ
+model Execution {
+  id              String          @id @default(cuid())
+  projectId       String
+  project         Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  phase           Int             // 1-4
+  step            Int             // ステップ番号（1-22）
+  agentName       String          // エージェント名
+
+  status          ExecutionStatus @default(RUNNING)
+  startedAt       DateTime        @default(now())
+  completedAt     DateTime?
+
+  // 入力・出力
+  input           Json?
+  output          Json?
+  error           String?
+
+  @@index([projectId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+enum ExecutionStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+// 設定
+model Settings {
+  id              String   @id @default("singleton")
+
+  // LLM設定
+  llmProvider     String   @default("claude")  // "claude" | "openai"
+  claudeModel     String   @default("claude-sonnet-4-5-20250929")
+  openaiModel     String   @default("gpt-4o")
+  temperature     Float    @default(0.7)
+  maxTokens       Int      @default(4096)
+
+  // RAG設定
+  ragEnabled      Boolean  @default(true)
+  embeddingModel  String   @default("text-embedding-3-small")
+
+  // その他
+  updatedAt       DateTime @updatedAt
+}
+
+// ===============================
+// 自動企画生成（Auto Planner）
+// ===============================
+
+// キーワード管理
+model Keyword {
+  id            String    @id @default(cuid())
+  keyword       String    @unique           // キーワード本体
+  volume        Int?                        // 月間検索ボリューム
+  difficulty    Int?                        // 競合度（0-100）
+  usageCount    Int       @default(0)       // 使用回数
+  lastUsedAt    DateTime?                   // 最後に使用した日時
+  category      String?                     // カテゴリ（断熱、間取り、etc）
+  priority      Int       @default(0)       // 優先度（高いほど優先）
+  isActive      Boolean   @default(true)    // 有効/無効
+  notes         String?                     // メモ
+  source        String?                     // データ元（ラッコKW、手動など）
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Super Orchestrator用拡張
+  vidiqScore       Int?                     // vidIQからのスコア (0-100)
+  trend            String?                  // "rising" | "stable" | "declining"
+  avgRank          Float?                   // 過去企画の平均順位
+  successRate      Float?                   // 過去企画の成功率
+  lastTrendCheck   DateTime?                // 最終トレンドチェック日時
+  competitorUsage  Int       @default(0)    // 競合の使用回数
+
+  @@index([volume])
+  @@index([usageCount])
+  @@index([category])
+  @@index([isActive])
+  @@index([priority])
+  @@index([vidiqScore])
+  @@index([trend])
+}
+
+// 自動生成バッチ
+model AutoPlanBatch {
+  id               String      @id @default(cuid())
+  triggeredAt      DateTime    @default(now())  // 実行開始日時
+  triggeredBy      String      @default("cron") // "cron" | "manual"
+  status           BatchStatus @default(RUNNING)
+
+  // 設定
+  targetCount      Int         @default(30)     // 目標生成数
+
+  // 結果
+  totalPlans       Int         @default(0)      // 生成した企画数
+  completedPlans   Int         @default(0)      // 成功した企画数
+  failedPlans      Int         @default(0)      // 失敗した企画数
+
+  // データ
+  trendData        Json?                        // 取得したトレンドデータ
+  selectedKeywords Json?                        // 選定されたキーワードリスト
+
+  // Super Orchestrator用拡張
+  strategyPhaseResult  Json?                    // キーワード戦略AIの結果
+  rankingPhaseResult   Json?                    // 優先度ランキングの結果
+  notificationSent     Boolean  @default(false) // Slack通知送信済み
+
+  // エラー情報
+  error            String?
+
+  // 完了情報
+  completedAt      DateTime?
+
+  // リレーション
+  projects         Project[]                    // 生成された企画
+  executionLogs    AutoExecutionLog[]           // 詳細実行ログ
+
+  @@index([triggeredAt])
+  @@index([status])
+}
+
+enum BatchStatus {
+  RUNNING     // 実行中
+  COMPLETED   // 完了
+  FAILED      // 失敗
+  PARTIAL     // 一部成功
+}
+
+// ===============================
+// Super Orchestrator用テーブル
+// ===============================
+
+// トレンドスナップショット（定期的にトレンドデータを保存）
+model TrendSnapshot {
+  id              String    @id @default(cuid())
+  capturedAt      DateTime  @default(now())
+
+  // 自チャンネルデータ
+  channelData     Json?     // ChannelTrend[]
+
+  // 競合データ
+  competitorData  Json?     // CompetitorTrend[]
+
+  // 抽出されたトレンドキーワード
+  trendKeywords   Json?     // string[]
+
+  // 分析結果サマリー
+  summary         String?
+
+  @@index([capturedAt])
+}
+
+// 競合チャンネル管理
+model CompetitorChannel {
+  id            String    @id @default(cuid())
+  channelId     String    @unique  // YouTube Channel ID
+  channelName   String
+  isActive      Boolean   @default(true)
+  priority      Int       @default(0)
+  category      String?   // 同業種、異業種など
+  notes         String?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([isActive])
+  @@index([category])
+}
+
+// vidIQキーワードデータ
+model VidIQKeyword {
+  id              String    @id @default(cuid())
+  keyword         String    @unique
+  searchVolume    Int?      // 月間検索ボリューム
+  competition     Float?    // 競合度 (0.0-1.0)
+  overallScore    Int?      // vidIQスコア (0-100)
+  relatedKeywords Json?     // 関連キーワード
+  trend           String?   // "rising" | "stable" | "declining"
+
+  syncedAt        DateTime  @default(now())
+
+  @@index([searchVolume])
+  @@index([overallScore])
+  @@index([syncedAt])
+}
+
+// 自動実行ログ（詳細版）
+model AutoExecutionLog {
+  id            String    @id @default(cuid())
+  batchId       String
+  batch         AutoPlanBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  phase         String    // "keyword_strategy" | "plan_generation" | "priority_ranking"
+  action        String    // 具体的なアクション
+  status        String    // "started" | "completed" | "failed"
+
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+  duration      Int?      // ミリ秒
+
+  input         Json?
+  output        Json?
+  error         String?
+
+  @@index([batchId])
+  @@index([phase])
+  @@index([startedAt])
+}
