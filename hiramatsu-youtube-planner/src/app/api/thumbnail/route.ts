@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { buildThumbnailPrompt } from '@/lib/prompts/thumbnail-prompt';
+import { searchYouTubeVideos, formatResearchForPrompt } from '@/lib/youtube-api';
 
 // Vercel関数のタイムアウトを300秒に延長
 export const maxDuration = 300;
@@ -14,7 +15,7 @@ const MODEL_IDS = {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { apiKey, transcript, additionalInfo, model = 'sonnet' } = body;
+    const { apiKey, transcript, additionalInfo, model = 'sonnet', youtubeApiKey, searchKeyword } = body;
 
     if (!apiKey) {
       return NextResponse.json(
@@ -30,11 +31,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // YouTube APIでリサーチ（APIキーとキーワードがある場合のみ）
+    let youtubeResearchText = '';
+    let researchData = null;
+
+    if (youtubeApiKey && searchKeyword) {
+      try {
+        const research = await searchYouTubeVideos(youtubeApiKey, searchKeyword, 50);
+        youtubeResearchText = formatResearchForPrompt(research);
+        researchData = {
+          keyword: searchKeyword,
+          totalResults: research.totalResults,
+          videosAnalyzed: research.videos.length,
+          avgViews: research.analysis.avgViews,
+          medianViews: research.analysis.medianViews,
+          maxViews: research.analysis.maxViews,
+          patterns: research.analysis.commonPatterns,
+          topVideos: research.videos.slice(0, 5).map(v => ({
+            title: v.title,
+            viewCount: v.viewCount,
+            channelTitle: v.channelTitle,
+          })),
+        };
+      } catch (ytError) {
+        console.error('YouTube API Error:', ytError);
+        researchData = {
+          error: ytError instanceof Error ? ytError.message : 'YouTube API error',
+          keyword: searchKeyword,
+        };
+      }
+    }
+
     const client = new Anthropic({
       apiKey,
     });
 
-    const prompt = buildThumbnailPrompt(transcript, additionalInfo);
+    // リサーチデータをプロンプトに追加
+    const researchSection = youtubeResearchText
+      ? `\n\n---\n\n${youtubeResearchText}\n\n**上記の競合データを参考に、再生回数が伸びるサムネ・タイトルを作成してください。特に上位動画のタイトルパターンを分析し、差別化ポイントを見つけてください。**`
+      : '';
+
+    const prompt = buildThumbnailPrompt(transcript, (additionalInfo || '') + researchSection);
     const modelId = MODEL_IDS[model as keyof typeof MODEL_IDS] || MODEL_IDS.sonnet;
 
     const message = await client.messages.create({
@@ -66,6 +103,7 @@ export async function POST(request: NextRequest) {
           inputTokens: message.usage.input_tokens,
           outputTokens: message.usage.output_tokens,
         },
+        research: researchData,
       },
     });
   } catch (error) {

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { parseThumbnailResponse, ParsedThumbnailResponse, ThumbnailProposal } from '@/lib/prompts/thumbnail-prompt';
 
 const API_KEY_STORAGE_KEY = 'hiramatsu-shorts-api-key';
+const YOUTUBE_API_KEY_STORAGE_KEY = 'hiramatsu-youtube-api-key';
 const HISTORY_STORAGE_KEY = 'hiramatsu-thumbnail-history';
 
 interface HistoryItem {
@@ -32,10 +33,17 @@ export default function ThumbnailPage() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [youtubeApiKey, setYoutubeApiKey] = useState('');
+  const [showYoutubeKey, setShowYoutubeKey] = useState(false);
+  const [isYoutubeKeySaved, setIsYoutubeKeySaved] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [researchData, setResearchData] = useState<any>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(API_KEY_STORAGE_KEY);
     if (saved) { setApiKey(saved); setIsKeySaved(true); }
+    const savedYoutube = localStorage.getItem(YOUTUBE_API_KEY_STORAGE_KEY);
+    if (savedYoutube) { setYoutubeApiKey(savedYoutube); setIsYoutubeKeySaved(true); }
     const savedHistory = localStorage.getItem(HISTORY_STORAGE_KEY);
     if (savedHistory) {
       try {
@@ -45,6 +53,20 @@ export default function ThumbnailPage() {
       }
     }
   }, []);
+
+  const saveYoutubeKey = () => {
+    if (youtubeApiKey.trim()) {
+      localStorage.setItem(YOUTUBE_API_KEY_STORAGE_KEY, youtubeApiKey.trim());
+      setIsYoutubeKeySaved(true);
+    }
+  };
+
+  const clearYoutubeKey = () => {
+    localStorage.removeItem(YOUTUBE_API_KEY_STORAGE_KEY);
+    setYoutubeApiKey('');
+    setIsYoutubeKeySaved(false);
+    setResearchData(null);
+  };
 
   const saveToHistory = (proposals: ThumbnailProposal[], transcriptText: string, analysis: any) => {
     const newItem: HistoryItem = {
@@ -93,25 +115,40 @@ export default function ThumbnailPage() {
     setIsKeySaved(false);
   };
 
-  const progressSteps = [
-    { percent: 5, message: '文字起こしを分析中...' },
-    { percent: 15, message: '動画の要点を抽出中...' },
-    { percent: 30, message: '「つまりどういうこと？」1回目...' },
-    { percent: 45, message: '「つまりどういうこと？」2回目...' },
-    { percent: 55, message: '「つまりどういうこと？」3回目...' },
-    { percent: 70, message: 'サムネ文言を生成中...' },
-    { percent: 85, message: 'タイトル案を最適化中...' },
-    { percent: 95, message: 'CTR評価中...' },
-  ];
+  
+  const getProgressSteps = () => {
+    const baseSteps = [
+      { percent: 5, message: '文字起こしを分析中...' },
+    ];
+    if (youtubeApiKey.trim() && searchKeyword.trim()) {
+      baseSteps.push(
+        { percent: 12, message: 'YouTube競合動画を検索中...' },
+        { percent: 22, message: '再生回数データを取得中...' },
+        { percent: 32, message: 'タイトルパターンを分析中...' }
+      );
+    }
+    baseSteps.push(
+      { percent: 40, message: '動画の要点を抽出中...' },
+      { percent: 50, message: '「つまりどういうこと？」1回目...' },
+      { percent: 60, message: '「つまりどういうこと？」2回目...' },
+      { percent: 70, message: '「つまりどういうこと？」3回目...' },
+      { percent: 80, message: 'サムネ文言を生成中...' },
+      { percent: 90, message: 'タイトル案を最適化中...' },
+      { percent: 96, message: 'CTR評価中...' }
+    );
+    return baseSteps;
+  };
 
   const generate = async () => {
     if (!transcript.trim() || !apiKey) return;
     setIsLoading(true);
     setError(null);
     setResult(null);
+    setResearchData(null);
     setProgress(0);
     setProgressMessage('準備中...');
 
+    const progressSteps = getProgressSteps();
     let stepIndex = 0;
     const progressInterval = setInterval(() => {
       if (stepIndex < progressSteps.length) {
@@ -131,6 +168,8 @@ export default function ThumbnailPage() {
           transcript,
           additionalInfo,
           model: selectedModel,
+          youtubeApiKey: youtubeApiKey.trim() || undefined,
+          searchKeyword: searchKeyword.trim() || undefined,
         }),
       });
 
@@ -159,6 +198,11 @@ export default function ThumbnailPage() {
 
       setResult(parsed);
       setExpandedRow(1);
+
+      if (data.data?.research) {
+        setResearchData(data.data.research);
+      }
+
       saveToHistory(parsed.proposals, transcript, parsed.analysis);
 
     } catch (e) {
@@ -440,6 +484,104 @@ export default function ThumbnailPage() {
             </button>
             {showAdvanced && (
               <div style={{ padding: '0 20px 16px' }}>
+                {/* YouTube APIキー */}
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#666', marginBottom: '4px' }}>
+                    <span>YouTube APIキー</span>
+                    <span style={{
+                      padding: '2px 6px',
+                      background: '#E3F2FD',
+                      color: '#1976D2',
+                      fontSize: '10px',
+                      borderRadius: '4px',
+                      fontWeight: '500'
+                    }}>
+                      競合リサーチ
+                    </span>
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
+                      <input
+                        type={showYoutubeKey ? 'text' : 'password'}
+                        value={youtubeApiKey}
+                        onChange={e => { setYoutubeApiKey(e.target.value); setIsYoutubeKeySaved(false); }}
+                        placeholder="AIza..."
+                        style={{
+                          width: '100%', height: '32px', padding: '0 32px 0 10px',
+                          border: '1px solid #ddd', borderRadius: '4px', fontSize: '13px',
+                          outline: 'none', boxSizing: 'border-box'
+                        }}
+                      />
+                      <button
+                        onClick={() => setShowYoutubeKey(!showYoutubeKey)}
+                        style={{
+                          position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
+                          background: 'none', border: 'none', cursor: 'pointer', color: '#999', fontSize: '12px'
+                        }}
+                      >
+                        {showYoutubeKey ? '🙈' : '👁'}
+                      </button>
+                    </div>
+                    <button
+                      onClick={isYoutubeKeySaved ? clearYoutubeKey : saveYoutubeKey}
+                      disabled={!youtubeApiKey.trim()}
+                      style={{
+                        height: '32px', padding: '0 12px', borderRadius: '4px',
+                        border: 'none', fontSize: '12px', fontWeight: '500', cursor: 'pointer',
+                        background: isYoutubeKeySaved ? '#E8F5E9' : '#1976D2',
+                        color: isYoutubeKeySaved ? '#2E7D32' : '#fff',
+                        opacity: youtubeApiKey.trim() ? 1 : 0.5
+                      }}
+                    >
+                      {isYoutubeKeySaved ? '削除' : '保存'}
+                    </button>
+                  </div>
+                  <p style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
+                    <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style={{ color: '#1976D2' }}>
+                      Google Cloud Console
+                    </a>から取得（任意）
+                  </p>
+                </div>
+
+                {/* リサーチキーワード */}
+                {isYoutubeKeySaved && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#666', marginBottom: '4px' }}>
+                      リサーチキーワード
+                    </label>
+                    <input
+                      type="text"
+                      value={searchKeyword}
+                      onChange={e => setSearchKeyword(e.target.value)}
+                      placeholder="例：断熱材 選び方"
+                      disabled={isLoading}
+                      style={{
+                        width: '100%', height: '32px', padding: '0 10px',
+                        border: '1px solid #ddd', borderRadius: '4px', fontSize: '13px',
+                        outline: 'none', boxSizing: 'border-box'
+                      }}
+                    />
+                    <p style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+                      競合動画を検索するキーワードを入力
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
+                      {['断熱材', '住宅ローン', '平屋', '太陽光発電', 'ZEH'].map(kw => (
+                        <button
+                          key={kw}
+                          onClick={() => setSearchKeyword(kw)}
+                          disabled={isLoading}
+                          style={{
+                            padding: '4px 8px', fontSize: '11px', color: '#1976D2',
+                            background: '#E3F2FD', border: 'none', borderRadius: '4px', cursor: 'pointer'
+                          }}
+                        >
+                          {kw}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <label style={{ display: 'block', fontSize: '12px', color: '#666', marginBottom: '4px' }}>補足情報</label>
                 <textarea
                   value={additionalInfo}
@@ -541,6 +683,83 @@ export default function ThumbnailPage() {
               </div>
             ))}
           </div>
+
+          {/* YouTubeリサーチ結果 */}
+          {researchData && result && !isLoading && (
+            <div style={{
+              background: researchData.error
+                ? 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)'
+                : 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)',
+              borderRadius: '8px', padding: '16px', marginBottom: '16px',
+              border: researchData.error ? '1px solid #FFB74D' : '1px solid #90CAF9'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '16px' }}>{researchData.error ? '⚠️' : '🔍'}</span>
+                  <span style={{ fontSize: '14px', fontWeight: 'bold', color: researchData.error ? '#E65100' : '#1565C0' }}>
+                    {researchData.error ? 'YouTubeリサーチエラー' : `YouTubeリサーチ結果「${researchData.keyword}」`}
+                  </span>
+                </div>
+              </div>
+              {researchData.error ? (
+                <p style={{ fontSize: '12px', color: '#E65100', margin: 0 }}>
+                  {researchData.error}
+                </p>
+              ) : (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '12px' }}>
+                    <div style={{ background: '#fff', borderRadius: '6px', padding: '12px', textAlign: 'center' }}>
+                      <p style={{ fontSize: '11px', color: '#666', margin: '0 0 4px' }}>サンプル数</p>
+                      <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#1976D2', margin: 0 }}>
+                        {researchData.videosAnalyzed}本
+                      </p>
+                    </div>
+                    <div style={{ background: '#fff', borderRadius: '6px', padding: '12px', textAlign: 'center' }}>
+                      <p style={{ fontSize: '11px', color: '#666', margin: '0 0 4px' }}>中央値再生数</p>
+                      <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#1976D2', margin: 0 }}>
+                        {researchData.medianViews?.toLocaleString()}回
+                      </p>
+                    </div>
+                    <div style={{ background: '#fff', borderRadius: '6px', padding: '12px', textAlign: 'center' }}>
+                      <p style={{ fontSize: '11px', color: '#666', margin: '0 0 4px' }}>最高再生数</p>
+                      <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#1976D2', margin: 0 }}>
+                        {researchData.maxViews?.toLocaleString()}回
+                      </p>
+                    </div>
+                  </div>
+                  {researchData.topVideos && researchData.topVideos.length > 0 && (
+                    <div style={{ background: '#fff', borderRadius: '6px', padding: '12px' }}>
+                      <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#1565C0', margin: '0 0 8px' }}>
+                        上位動画タイトル
+                      </p>
+                      {researchData.topVideos.slice(0, 3).map((v: any, i: number) => (
+                        <p key={i} style={{ fontSize: '12px', color: '#333', margin: '4px 0', lineHeight: 1.4 }}>
+                          {i + 1}. {v.title} <span style={{ color: '#999' }}>({v.viewCount?.toLocaleString()}回)</span>
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                  {researchData.patterns && researchData.patterns.length > 0 && (
+                    <div style={{ marginTop: '12px' }}>
+                      <p style={{ fontSize: '12px', color: '#1565C0', margin: '0 0 6px', fontWeight: '500' }}>
+                        発見されたタイトルパターン:
+                      </p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {researchData.patterns.map((pattern: string, i: number) => (
+                          <span key={i} style={{
+                            padding: '4px 10px', background: '#fff', borderRadius: '12px',
+                            fontSize: '11px', color: '#1976D2'
+                          }}>
+                            {pattern}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
           {/* 分析結果 */}
           {result && result.analysis && !isLoading && (
