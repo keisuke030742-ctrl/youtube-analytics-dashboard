@@ -654,12 +654,15 @@ export default function ThumbnailPage() {
           {/* 生成方法の説明 */}
           <div style={{ background: '#FFF8E1', borderRadius: '8px', padding: '16px', marginTop: '16px' }}>
             <h3 style={{ fontSize: '13px', fontWeight: 'bold', color: '#F57C00', margin: '0 0 8px' }}>
-              💡 生成方法
+              💡 生成ワークフロー
             </h3>
-            <p style={{ fontSize: '12px', color: '#666', margin: 0, lineHeight: 1.6 }}>
-              1. 動画内容を分析<br />
-              2. 「つまりどういうこと？」を3回繰り返し本質を抽出<br />
-              3. 衝撃ワード・具体性・ベネフィットを含む文言を生成
+            <p style={{ fontSize: '11px', color: '#666', margin: 0, lineHeight: 1.7 }}>
+              1. 動画内容を理解<br />
+              2. ペルソナ3層構想（初心者/検討/緊急）<br />
+              3. YouTube競合リサーチ<br />
+              4. 帰納法で法則を導く<br />
+              5. 「つまりどういうこと？」×3回<br />
+              6. 法則×本質でサムネ文言作成
             </p>
           </div>
         </div>
@@ -758,6 +761,56 @@ export default function ThumbnailPage() {
                   )}
                 </>
               )}
+            </div>
+          )}
+
+          {/* ペルソナ分析 */}
+          {result && result.analysis && result.analysis.personas && !isLoading && (
+            <div style={{
+              background: 'linear-gradient(135deg, #FCE4EC 0%, #F8BBD9 100%)',
+              borderRadius: '8px', padding: '16px', marginBottom: '16px',
+              border: '1px solid #F48FB1'
+            }}>
+              <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#C2185B', margin: '0 0 12px' }}>
+                👥 ペルソナ3層分析
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                <div style={{ background: '#fff', borderRadius: '6px', padding: '10px 12px' }}>
+                  <p style={{ fontSize: '11px', color: '#C2185B', margin: '0 0 4px', fontWeight: 'bold' }}>初心者層</p>
+                  <p style={{ fontSize: '12px', color: '#333', margin: 0, lineHeight: 1.5 }}>{result.analysis.personas.beginner}</p>
+                </div>
+                <div style={{ background: '#fff', borderRadius: '6px', padding: '10px 12px' }}>
+                  <p style={{ fontSize: '11px', color: '#C2185B', margin: '0 0 4px', fontWeight: 'bold' }}>検討層</p>
+                  <p style={{ fontSize: '12px', color: '#333', margin: 0, lineHeight: 1.5 }}>{result.analysis.personas.considering}</p>
+                </div>
+                <div style={{ background: '#fff', borderRadius: '6px', padding: '10px 12px' }}>
+                  <p style={{ fontSize: '11px', color: '#C2185B', margin: '0 0 4px', fontWeight: 'bold' }}>緊急層</p>
+                  <p style={{ fontSize: '12px', color: '#333', margin: 0, lineHeight: 1.5 }}>{result.analysis.personas.urgent}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 競合法則 */}
+          {result && result.analysis && result.analysis.competitorRules && result.analysis.competitorRules.length > 0 && !isLoading && (
+            <div style={{
+              background: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)',
+              borderRadius: '8px', padding: '16px', marginBottom: '16px',
+              border: '1px solid #FFB74D'
+            }}>
+              <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#E65100', margin: '0 0 12px' }}>
+                📊 帰納法で導いた法則
+              </h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {result.analysis.competitorRules.map((rule: string, i: number) => (
+                  <span key={i} style={{
+                    padding: '6px 12px', background: '#fff', borderRadius: '16px',
+                    fontSize: '12px', color: '#E65100', border: '1px solid #FFB74D'
+                  }}>
+                    {rule}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 

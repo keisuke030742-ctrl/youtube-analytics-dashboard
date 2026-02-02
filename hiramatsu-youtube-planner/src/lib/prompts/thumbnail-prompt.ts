@@ -43,29 +43,60 @@ export const THUMBNAIL_SYSTEM_CONTEXT = `あなたは「職人社長の家づく
 - プロが選ぶ〇〇
 - 知らないと損する〇〇`;
 
-export const THUMBNAIL_ANALYSIS_RULES = `## サムネ文言作成メソッド「つまりどういうこと？」
+export const THUMBNAIL_WORKFLOW = `## サムネ文言作成ワークフロー（6ステップ）
 
-動画の内容から本質を抽出するため、以下のステップを**必ず実行**すること：
+以下のワークフローを**必ず順番に実行**すること：
 
-### Step 1: 動画の要点を抽出
-動画の文字起こしから、主張・ポイントを箇条書きで整理
+### Step 1: 動画の内容を理解
+動画の文字起こしから、主張・ポイント・結論を箇条書きで整理する
 
-### Step 2: 「つまりどういうこと？」（1回目）
-→ 視聴者目線で一言でまとめる
+### Step 2: ペルソナ3層構想
+この動画を見る視聴者を3層に分けて想定する：
 
-### Step 3: 「つまりどういうこと？」（2回目）
-→ さらにシンプルに、感情に訴える形でまとめる
+**層1: 初心者層（検索流入）**
+- どんな悩み/疑問で検索してきた？
+- 何も知らない状態で惹かれるワードは？
 
-### Step 4: 「つまりどういうこと？」（3回目）
-→ **これがサムネ文言の原案になる**
+**層2: 検討層（比較検討中）**
+- 何と何を比べている？
+- 決め手になる情報は何？
+
+**層3: 緊急層（今すぐ決めたい）**
+- 背中を押すワードは？
+- 失敗を避けたい心理に刺さるワードは？
+
+### Step 3: 競合分析（YouTubeリサーチデータがある場合）
+- 再生回数が多い動画のタイトルパターンを分析
+- 当たっているサムネ文言・タイトル文言を収集
+- 共通するキーワード・表現を抽出
+
+### Step 4: 帰納法で法則を導く
+競合動画から見つけた成功パターンを法則化する：
+- 「〇〇系のワードが多い」→ なぜ効くのか？
+- 「数字を入れている」→ どんな数字が効くのか？
+- 「ネガティブ訴求が多い」→ どんな恐怖心に訴えているか？
+
+### Step 5: 「つまりどういうこと？」で本質を抽出
+動画の内容を視聴者目線で噛み砕く：
+
+**1回目**: 動画の主張を一言でまとめる
+**2回目**: さらにシンプルに、感情に訴える形でまとめる
+**3回目**: **これがサムネ文言の原案になる**
+
+### Step 6: 法則×本質でサムネ文言を作成
+Step 4の法則とStep 5の本質を掛け合わせて、強い文言を作成する
 
 ### 例
 - 動画内容: 「断熱材にはグラスウール、ロックウール、セルロースファイバーなどがあり、それぞれ特性が違う。グラスウールは安いが施工次第で性能が落ちる。吹付け断熱は隙間なく施工できるが高い。」
-- 1回目: 「断熱材は種類によって性能と価格が違う」
-- 2回目: 「安い断熱材を選ぶと後で損する」
-- 3回目: **「断熱ケチると光熱費地獄」** ← これがサムネ文言
+- ペルソナ層1: 「断熱材って何がいいの？」と検索してきた初心者
+- ペルソナ層2: ハウスメーカーから提案された断熱材で本当にいいか悩んでいる
+- ペルソナ層3: 契約直前、断熱だけは妥協したくない
+- 競合法則: 「〇〇をケチると〇〇」「〇〇は時代遅れ」が多い
+- つまり1回目: 「断熱材は種類によって性能と価格が違う」
+- つまり2回目: 「安い断熱材を選ぶと後で損する」
+- つまり3回目: **「断熱ケチると光熱費地獄」** ← サムネ文言
 
-**重要**: 動画で言っている言葉をそのまま使うのではなく、本質を突いた強い文言を作成すること`;
+**重要**: 動画で言っている言葉をそのまま使わず、本質を突いた強い文言に変換すること`;
 
 export const THUMBNAIL_FORMAT_RULES = `## サムネ文言のルール
 
@@ -100,6 +131,12 @@ export const THUMBNAIL_OUTPUT_FORMAT = `## 出力フォーマット（必須）
   "analysis": {
     "videoSummary": "動画の要約（100文字程度）",
     "keyPoints": ["ポイント1", "ポイント2", "ポイント3"],
+    "personas": {
+      "beginner": "初心者層：どんな悩みで検索してきたか",
+      "considering": "検討層：何を比較検討しているか",
+      "urgent": "緊急層：背中を押す/失敗を避けたい心理"
+    },
+    "competitorRules": ["競合から導いた法則1", "法則2", "法則3"],
     "tumaridouiukoto1": "つまりどういうこと？1回目",
     "tumaridouiukoto2": "つまりどういうこと？2回目",
     "tumaridouiukoto3": "つまりどういうこと？3回目（本質）"
@@ -108,6 +145,7 @@ export const THUMBNAIL_OUTPUT_FORMAT = `## 出力フォーマット（必須）
     {
       "rank": 1,
       "type": "negative",
+      "targetPersona": "beginner|considering|urgent",
       "thumbnailText": "サムネ文言（4-12文字）",
       "title": "タイトル（30-40文字）",
       "imageDescription": "サムネ画像のおすすめ構図（何を映すべきか）",
@@ -115,22 +153,22 @@ export const THUMBNAIL_OUTPUT_FORMAT = `## 出力フォーマット（必須）
       "specificity": "具体性のある要素",
       "benefit": "ベネフィットまたはデメリット",
       "expectedCTR": "予想CTR（高/中/低）",
-      "reasoning": "なぜこの文言が効くか（2行）"
+      "reasoning": "なぜこの文言が効くか（ペルソナ×法則×本質の観点から）"
     }
   ]
 }
 \`\`\`
 
 ### 6パターンの内訳（必須）
-1. **ネガティブ訴求・警告型**: 「〇〇はやめとけ」「〇〇で後悔」
-2. **ネガティブ訴求・損失型**: 「〇〇円損」「〇〇は無駄」
-3. **ネガティブ訴求・暴露型**: 「〇〇の闘」「業界が隠す〇〇」
-4. **ポジティブ訴求・ベネフィット型**: 「〇〇で節約」「〇〇がおすすめ」
-5. **ポジティブ訴求・権威型**: 「プロが選ぶ〇〇」「職人おすすめ」
-6. **比較・検証型**: 「〇〇 vs △△」「実際に調べた」
+1. **ネガティブ訴求・警告型**: 「〇〇はやめとけ」「〇〇で後悔」→ 緊急層向け
+2. **ネガティブ訴求・損失型**: 「〇〇円損」「〇〇は無駄」→ 検討層向け
+3. **ネガティブ訴求・暴露型**: 「〇〇の闇」「業界が隠す〇〇」→ 検討層向け
+4. **ポジティブ訴求・ベネフィット型**: 「〇〇で節約」「〇〇がおすすめ」→ 初心者層向け
+5. **ポジティブ訴求・権威型**: 「プロが選ぶ〇〇」「職人おすすめ」→ 検討層向け
+6. **比較・検証型**: 「〇〇 vs △△」「実際に調べた」→ 検討層・緊急層向け
 
 ### 評価基準
-- **expectedCTR: 高**: 衝撃ワード＋具体性＋ベネフィットが全て揃っている
+- **expectedCTR: 高**: 衝撃ワード＋具体性＋ベネフィットが全て揃っている＋ペルソナに刺さる
 - **expectedCTR: 中**: 2要素が揃っている
 - **expectedCTR: 低**: 1要素のみ`;
 
@@ -142,7 +180,7 @@ export function buildThumbnailPrompt(transcript: string, additionalInfo?: string
 
 ---
 
-${THUMBNAIL_ANALYSIS_RULES}
+${THUMBNAIL_WORKFLOW}
 
 ---
 
@@ -165,18 +203,20 @@ ${transcript}
 
 ### 作業手順（厳守）
 
-1. まず動画内容を読み、要点を整理する
-2. 「つまりどういうこと？」を3回繰り返して本質を抽出
-3. 抽出した本質から6パターンのサムネ・タイトル案を作成
-4. 各案に衝撃ワード・具体性・ベネフィットが含まれているかチェック
-5. CTRが高い順にランキング
+1. **動画内容を理解**: 文字起こしから要点・主張・結論を整理
+2. **ペルソナ3層構想**: 初心者層・検討層・緊急層それぞれの視点を想定
+3. **競合分析**: YouTubeリサーチデータがあれば、当たっているタイトルパターンを収集
+4. **帰納法で法則を導く**: 競合の成功パターンから「なぜ効くのか」を法則化
+5. **「つまりどういうこと？」×3回**: 動画の本質を抽出
+6. **法則×本質でサムネ文言作成**: 6パターンを生成し、CTR順にランキング
 
 ### 重要な制約
-1. 動画で言っている言葉をそのまま使わない（本質を突いた強い文言に変換）
-2. サムネ文言は4〜12文字に収める
-3. ネガティブ訴求を優先（住宅系はネガティブの方が強い）
-4. 具体的な数字やモノの名前を入れる
-5. 「つまりどういうこと？」の分析結果を必ずanalysisに含める
+1. **動画で言っている言葉をそのまま使わない**（本質を突いた強い文言に変換）
+2. サムネ文言は**4〜12文字**に収める
+3. **ネガティブ訴求を優先**（住宅系はネガティブの方が強い）
+4. **具体的な数字やモノの名前**を入れる
+5. **ペルソナ分析・競合法則・つまり分析**を必ずanalysisに含める
+6. 各サムネ案に**どのペルソナ向けか**を明記する
 
 ### 出力形式（厳守）
 - JSON形式のみを出力
@@ -188,9 +228,17 @@ ${transcript}
 /**
  * サムネ・タイトル案の型定義
  */
+export interface PersonaAnalysis {
+  beginner: string;    // 初心者層
+  considering: string; // 検討層
+  urgent: string;      // 緊急層
+}
+
 export interface ThumbnailAnalysis {
   videoSummary: string;
   keyPoints: string[];
+  personas: PersonaAnalysis;
+  competitorRules: string[];
   tumaridouiukoto1: string;
   tumaridouiukoto2: string;
   tumaridouiukoto3: string;
@@ -199,6 +247,7 @@ export interface ThumbnailAnalysis {
 export interface ThumbnailProposal {
   rank: number;
   type: 'negative' | 'positive' | 'comparison';
+  targetPersona: 'beginner' | 'considering' | 'urgent';
   thumbnailText: string;
   title: string;
   imageDescription: string;
@@ -223,6 +272,12 @@ export function parseThumbnailResponse(rawText: string): ParsedThumbnailResponse
     analysis: {
       videoSummary: '',
       keyPoints: [],
+      personas: {
+        beginner: '',
+        considering: '',
+        urgent: '',
+      },
+      competitorRules: [],
       tumaridouiukoto1: '',
       tumaridouiukoto2: '',
       tumaridouiukoto3: '',
@@ -263,6 +318,12 @@ export function parseThumbnailResponse(rawText: string): ParsedThumbnailResponse
     const analysis: ThumbnailAnalysis = {
       videoSummary: parsed.analysis?.videoSummary || '',
       keyPoints: parsed.analysis?.keyPoints || [],
+      personas: {
+        beginner: parsed.analysis?.personas?.beginner || '',
+        considering: parsed.analysis?.personas?.considering || '',
+        urgent: parsed.analysis?.personas?.urgent || '',
+      },
+      competitorRules: parsed.analysis?.competitorRules || [],
       tumaridouiukoto1: parsed.analysis?.tumaridouiukoto1 || '',
       tumaridouiukoto2: parsed.analysis?.tumaridouiukoto2 || '',
       tumaridouiukoto3: parsed.analysis?.tumaridouiukoto3 || '',
@@ -271,6 +332,7 @@ export function parseThumbnailResponse(rawText: string): ParsedThumbnailResponse
     const proposals: ThumbnailProposal[] = (parsed.proposals || []).map((p: any, index: number) => ({
       rank: p.rank || index + 1,
       type: p.type || 'negative',
+      targetPersona: p.targetPersona || 'considering',
       thumbnailText: p.thumbnailText || '',
       title: p.title || '',
       imageDescription: p.imageDescription || '',
