@@ -517,10 +517,11 @@ export default function ShortsPage() {
                 }}
               >
                 <option value="sonnet">Claude Sonnet 4（高速・低コスト）</option>
-                <option value="opus">Claude Opus 4.5（最高品質）</option>
+                <option value="opus">Claude Opus 4.5（高品質）</option>
+                <option value="opus46">Claude Opus 4.6（最高品質）</option>
               </select>
               <p style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
-                {selectedModel === 'opus' ? '⚡ 最高品質の企画案を生成（コスト高め）' : '💨 バランスの取れた高速生成'}
+                {selectedModel === 'opus46' ? '⚡ 最新・最高品質の企画案を生成（コスト高め）' : selectedModel === 'opus' ? '⚡ 高品質の企画案を生成（コスト高め）' : '💨 バランスの取れた高速生成'}
               </p>
             </div>
 

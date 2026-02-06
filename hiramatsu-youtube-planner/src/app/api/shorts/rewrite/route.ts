@@ -6,6 +6,7 @@ export const maxDuration = 60;
 const MODEL_IDS = {
   sonnet: 'claude-sonnet-4-20250514',
   opus: 'claude-opus-4-5-20251101',
+  opus46: 'claude-opus-4-6',
 } as const;
 
 const STYLE_PROMPTS: Record<string, string> = {
